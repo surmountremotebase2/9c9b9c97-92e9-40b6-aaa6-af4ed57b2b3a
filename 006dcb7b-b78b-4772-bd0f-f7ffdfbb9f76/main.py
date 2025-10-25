@@ -228,7 +228,7 @@ class TradingStrategy(Strategy):
         final_roar_score = np.mean(self.raw_roar_scores)
         
         # 7. Calculate final allocation based on the smoothed score
-        spy_weight = np.clip(final_roar_score / 100.0, 0.0, 1.0)
+        spy_weight = round(np.clip(final_roar_score / 100.0, 0.0, 1.0), 1)
         bil_weight = 1.0 - spy_weight
         
         # Convert numpy floats to native Python floats to satisfy the assertion
