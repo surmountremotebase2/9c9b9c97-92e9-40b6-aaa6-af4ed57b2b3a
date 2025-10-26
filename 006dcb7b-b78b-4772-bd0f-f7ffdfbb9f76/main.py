@@ -218,14 +218,14 @@ class TradingStrategy(Strategy):
             score_ma_150 * 0.08 + score_dir_150 * 0.05 + score_str_150 * 0.05
         )
         
-        raw_score = (weighted_score * 25) - (blend_pct_chg * 100) * 1.4
+        raw_score = (weighted_score * 25) - (blend_pct_chg * 100) * 1.5
         
         # 6. Smooth the score using a 10-day rolling average
         self.raw_roar_scores.append(raw_score)
         if len(self.raw_roar_scores) > 10:
             self.raw_roar_scores.pop(0)
             
-        final_roar_score = int(np.mean(self.raw_roar_scores[-10:]))
+        final_roar_score = int(np.mean(self.raw_roar_scores[-5:]))
         
         # 7. Calculate final allocation based on the smoothed score
         spy_weight = round(np.clip(final_roar_score / 100.0, 0.0, 1.0), 1)
