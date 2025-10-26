@@ -24,7 +24,7 @@ class TradingStrategy(Strategy):
         allocations = {"AAPL": 1}
         if inverse_cramer_holdings:
             alloc_dict = inverse_cramer_holdings[-1]['allocations']
-            log(f"Trading: {inverse_cramer_holdings[-1]['allocations']}")
+            #log(f"Trading: {inverse_cramer_holdings[-1]['allocations']}")
             allocations = alloc_dict
-        log(f"allocations:{allocations}")
+        #log(f"allocations:{allocations}")
         return TargetAllocation(allocations)
