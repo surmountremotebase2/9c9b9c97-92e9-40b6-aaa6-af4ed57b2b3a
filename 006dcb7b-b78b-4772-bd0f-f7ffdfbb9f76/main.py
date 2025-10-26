@@ -233,7 +233,7 @@ class TradingStrategy(Strategy):
         
         # Convert numpy floats to native Python floats to satisfy the assertion
         self.last_alloc = {"SPY": float(spy_weight), "BIL": float(bil_weight)}
-        self.raw_roar_scores = {}
+        log(f"SCORE {final_roar_score}")
         
         return TargetAllocation(self.last_alloc)
 
