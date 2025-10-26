@@ -225,7 +225,7 @@ class TradingStrategy(Strategy):
         if len(self.raw_roar_scores) > 10:
             self.raw_roar_scores.pop(0)
             
-        final_roar_score = int(np.mean(self.raw_roar_scores))
+        final_roar_score = int(np.mean(self.raw_roar_scores[-10:]))
         
         # 7. Calculate final allocation based on the smoothed score
         spy_weight = round(np.clip(final_roar_score / 100.0, 0.0, 1.0), 1)
@@ -236,3 +236,10 @@ class TradingStrategy(Strategy):
         log(f"SCORE {final_roar_score}")
         
         return TargetAllocation(self.last_alloc)
+
+
+
+
+
+
+
