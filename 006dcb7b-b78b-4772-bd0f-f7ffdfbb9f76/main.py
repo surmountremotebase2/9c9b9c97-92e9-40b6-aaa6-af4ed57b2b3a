@@ -218,7 +218,7 @@ class TradingStrategy(Strategy):
             score_ma_150 * 0.08 + score_dir_150 * 0.05 + score_str_150 * 0.05
         )
         
-        raw_score = (weighted_score * 35) - (blend_pct_chg * 100)
+        raw_score = (weighted_score * 30) - (blend_pct_chg * 100)
         
         # 6. Smooth the score using a 10-day rolling average
         self.raw_roar_scores.append(raw_score)
