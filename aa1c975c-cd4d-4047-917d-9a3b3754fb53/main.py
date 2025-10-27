@@ -198,7 +198,7 @@ class TradingStrategy(Strategy):
         if len(self.raw_roar_scores) > 10:
             self.raw_roar_scores.pop(0)
 
-        final_roar_score = np.mean(self.raw_roar_scores[-5:])
+        final_roar_score = np.mean(self.raw_roar_scores[-6:])
 
         # ----------------------
         # NEW ALLOCATION FORMULA
