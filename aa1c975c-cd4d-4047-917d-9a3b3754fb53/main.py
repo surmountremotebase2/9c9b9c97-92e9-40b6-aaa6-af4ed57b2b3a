@@ -206,7 +206,7 @@ class TradingStrategy(Strategy):
         # Allocation = 50% SPY (fixed) + (ROAR Score × 50%)
         spy_weight = round(np.clip(0.5 + (0.5 * (final_roar_score / 100.0)), 0.0, 1.0), 2)
         bil_weight = 1.0 - spy_weight
-        log(f"SPY Weight:{spy_weight}")
+        #log(f"SPY Weight:{spy_weight}")
 
         self.last_alloc = {"SPY": float(spy_weight), "BIL": float(bil_weight)}
         return TargetAllocation(self.last_alloc)
