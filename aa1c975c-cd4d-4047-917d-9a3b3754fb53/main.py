@@ -186,12 +186,12 @@ class TradingStrategy(Strategy):
                          spy_close.pct_change(20).iloc[-1] + spy_close.pct_change(50).iloc[-1]) / 4
 
         weighted_score = (
-            score_ma_20 * 0.12 + score_dir_20 * 0.12 + score_str_20 * 0.08 +
-            score_vol * 0.10 +
-            score_ma_50 * 0.12 + score_dir_50 * 0.12 + score_str_50 * 0.08 +
-            score_ma_150 * 0.08 + score_dir_150 * 0.05 + score_str_150 * 0.05
+            score_ma_20 * 0.10 + score_dir_20 * 0.10 + score_str_20 * 0.08 +
+            score_vol * 0.2 +
+            score_ma_50 * 0.10 + score_dir_50 * 0.10 + score_str_50 * 0.08 +
+            score_ma_150 * 0.12 + score_dir_150 * 0.08 + score_str_150 * 0.08
         )
-
+        
         raw_score = (weighted_score * 30) - (blend_pct_chg * 100)
 
         self.raw_roar_scores.append(raw_score)
