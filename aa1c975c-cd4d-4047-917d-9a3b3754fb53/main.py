@@ -204,7 +204,7 @@ class TradingStrategy(Strategy):
         # NEW ALLOCATION FORMULA
         # ----------------------
         # Allocation = 50% SPY (fixed) + (ROAR Score × 50%)
-        spy_weight = round(np.clip(0.5 + 0.5 * (final_roar_score / 100.0), 0.0, 1.0), 1)
+        spy_weight = np.clip(0.5 + (0.5 * (final_roar_score / 100.0)), 0.0, 1.0)
         bil_weight = 1.0 - spy_weight
         log(f"SPY Weight:{spy_weight}")
 
