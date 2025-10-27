@@ -192,7 +192,7 @@ class TradingStrategy(Strategy):
             score_ma_150 * 0.12 + score_dir_150 * 0.08 + score_str_150 * 0.08
         )
         
-        raw_score = (weighted_score * 0) - (blend_pct_chg * 100)
+        raw_score = (weighted_score * 30) - (blend_pct_chg * 100)
 
         self.raw_roar_scores.append(raw_score)
         if len(self.raw_roar_scores) > 10:
@@ -206,7 +206,7 @@ class TradingStrategy(Strategy):
         # Allocation = 50% SPY (fixed) + (ROAR Score × 50%)
         spy_weight = round(np.clip(0.5 + 0.5 * (final_roar_score / 100.0), 0.0, 1.0), 1)
         bil_weight = 1.0 - spy_weight
-        log(f"SPY Weight:{final_roar_score}")
+        log(f"SPY Weight:{spy_weight}")
 
         self.last_alloc = {"SPY": float(spy_weight), "BIL": float(bil_weight)}
         return TargetAllocation(self.last_alloc)
