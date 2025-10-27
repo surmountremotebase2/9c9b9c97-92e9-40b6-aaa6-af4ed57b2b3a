@@ -192,7 +192,7 @@ class TradingStrategy(Strategy):
             score_ma_150 * 0.08 + score_dir_150 * 0.05 + score_str_150 * 0.05
         )
 
-        raw_score = (weighted_score * 25) - (blend_pct_chg * 100)
+        raw_score = (weighted_score * 25) - (blend_pct_chg * 100) * 1.2
 
         self.raw_roar_scores.append(raw_score)
         if len(self.raw_roar_scores) > 10:
