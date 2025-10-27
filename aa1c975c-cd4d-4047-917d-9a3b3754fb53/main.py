@@ -199,14 +199,13 @@ class TradingStrategy(Strategy):
             self.raw_roar_scores.pop(0)
 
         final_roar_score = int(np.mean(self.raw_roar_scores))
-        if final_roar_score < 0: final_roar_score = 0
 
         # ----------------------
         # NEW ALLOCATION FORMULA
         # ----------------------
         # Allocation = 50% SPY (fixed) + (ROAR Score × 50%)
         spy_weight = round(np.clip(final_roar_score / 100.0, 0.0, 1.0), 2)
-        spy_weight = np.clip(0.5 + (0.5 * spy_weight), 0.0, 1.0)
+        spy_weight = round(np.clip(0.5 + (0.5 * (final_roar_score / 100.0)), 0.0, 1.0), 2)
         bil_weight = 1.0 - spy_weight
         log(f"SPY Weight:{spy_weight}")
 
