@@ -24,7 +24,7 @@ class TradingStrategy(Strategy):
         allocations = {"SPY": 1}
         if insider_purchases_min_500m_market_cap_holdings:
             alloc_dict = insider_purchases_min_500m_market_cap_holdings[-1]['allocations']
-            log(f"Trading: {insider_purchases_min_500m_market_cap_holdings[-1]['allocations']}")
+            #log(f"Trading: {insider_purchases_min_500m_market_cap_holdings[-1]['allocations']}")
             allocations = alloc_dict
-        log(f"allocations:{allocations}")
+        #log(f"allocations:{allocations}")
         return TargetAllocation(allocations)
