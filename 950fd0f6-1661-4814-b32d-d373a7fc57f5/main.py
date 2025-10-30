@@ -6,6 +6,7 @@ class TradingStrategy(Strategy):
     def __init__(self):
         self.data_list = [RobBresnahan()]
         self.tickers = []
+        self.allocations = {}
 
     @property
     def interval(self):
@@ -21,10 +22,12 @@ class TradingStrategy(Strategy):
 
     def run(self, data):
         rob_bresnahan_holdings = data[("rob_bresnahan",)]
-        allocations = {"SPY": 1}
+        
         if rob_bresnahan_holdings:
             alloc_dict = rob_bresnahan_holdings[-1]['allocations']
             log(f"Trading: {rob_bresnahan_holdings[-1]['allocations']}")
-            allocations = alloc_dict
-        log(f"allocations:{allocations}")
-        return TargetAllocation(allocations)
+            self.allocations = alloc_dict
+        else:
+            self.allocations = {"SPY": 1}
+        log(f"allocations:{self.allocations}")
+        return TargetAllocation(self.allocations)
