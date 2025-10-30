@@ -7,6 +7,7 @@ class TradingStrategy(Strategy):
         self.data_list = [RobBresnahan()]
         self.tickers = []
         self.allocations = {}
+        self.count = 0
 
     @property
     def interval(self):
@@ -27,7 +28,9 @@ class TradingStrategy(Strategy):
             alloc_dict = rob_bresnahan_holdings[-1]['allocations']
             log(f"Trading: {rob_bresnahan_holdings[-1]['allocations']}")
             self.allocations = alloc_dict
+            self.count = 1
         else:
-            self.allocations = {"SPY": 1}
+            if self.count < 1:
+                self.allocations = {"SPY": 1}
         log(f"allocations:{self.allocations}")
         return TargetAllocation(self.allocations)
