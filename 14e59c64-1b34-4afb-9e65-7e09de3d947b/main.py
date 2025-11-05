@@ -213,7 +213,7 @@ class TradingStrategy(Strategy):
         # 5. Combine components into the Raw ROAR Score for the current day
         weighted_score = (
             score_ma_20 * 0.10 + score_dir_20 * 0.10 + score_str_20 * 0.08 +
-            score_vol * 0.1 +
+            score_vol * 0.05 +
             score_ma_50 * 0.10 + score_dir_50 * 0.10 + score_str_50 * 0.08 +
             score_ma_150 * 0.12 + score_dir_150 * 0.08 + score_str_150 * 0.08
         )
