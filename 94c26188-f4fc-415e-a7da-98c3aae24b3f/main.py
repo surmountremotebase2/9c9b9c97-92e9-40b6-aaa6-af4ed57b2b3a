@@ -21,7 +21,7 @@ class TradingStrategy(Strategy):
 
     def run(self, data):
         tim_moore_holdings = data[("tim_moore",)]
-        allocations = {"AAPL": 1}
+        allocations = {"SPY": 1}
         if tim_moore_holdings:
             alloc_dict = tim_moore_holdings[-1]['allocations']
             log(f"Trading: {tim_moore_holdings[-1]['allocations']}")
