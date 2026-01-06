@@ -81,4 +81,25 @@ class TradingStrategy(Strategy):
         self.score_history.append(score.iloc[-1])
 
         # Keltner channel on Score
-        score_se_
+        score_series = pd.Series(self.score_history)
+        midline = score_series.rolling(31).mean()
+
+        if len(midline.dropna()) == 0:
+            return TargetAllocation(self.last_alloc)
+
+        trend_ok = score_series.iloc[-1] > midline.iloc[-1]
+        regime_ok = self.ichimoku_pass(spy_close)
+
+        # --------------------
+        # Allocation logic
+        # --------------------
+
+        if trend_ok and regime_ok:
+            alloc = {"SPY": 1.0, "BIL": 0.0}
+        else:
+            alloc = {"SPY": 0.0, "BIL": 1.0}
+
+        self.last_alloc = alloc
+        log(f"Score={round(score.iloc[-1], 3)} | SPY={alloc['SPY']}")
+
+        return TargetAllocation(self.last_alloc)
