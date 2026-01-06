@@ -1,25 +1,41 @@
-from surmount.base import Strategy, TargetAllocation
 import pandas as pd
 import numpy as np
+from surmount.base_class import Strategy, TargetAllocation
+from surmount.logging import log
 
 
 class TradingStrategy(Strategy):
     """
-    Jason-style blended momentum strategy:
-    - 75% short-term (weekly proxy)
-    - 25% long-term (monthly proxy)
-    - Keltner channel on Score
-    - Ichimoku regime filter (pass/fail)
+    Jason Lipps Momentum Strategy (Surmount-compatible)
+
+    - Blended TSI Score:
+        75% short-term (weekly proxy)
+        25% long-term (monthly proxy)
+    - Keltner Channel applied to Score
+    - Ichimoku Cloud as pass/fail regime filter
+    - Binary risk-on / risk-off allocation
     """
 
     def __init__(self):
-        self.assets = [
-            "SPY", "QQQ", "TLT", "IEF", "AGG", "BIL"
-        ]
+        self._assets = ["SPY", "BIL"]
+        self.rebalance_day = 1  # Tuesday
+        self.last_alloc = {"SPY": 0.0, "BIL": 1.0}
+        self.score_history = []
 
-    @staticmethod
-    def tsi(series, short, long):
-        diff = series.diff()
+    @property
+    def assets(self):
+        return self._assets
+
+    @property
+    def interval(self):
+        return "1day"
+
+    # --------------------
+    # Indicator helpers
+    # --------------------
+
+    def tsi(self, close, short, long):
+        diff = close.diff()
         abs_diff = diff.abs()
 
         num = diff.ewm(span=short).mean().ewm(span=long).mean()
@@ -27,61 +43,42 @@ class TradingStrategy(Strategy):
 
         return num / den
 
-    def compute_score(self, prices):
-        # Short (weekly proxy)
-        tsi_short = self.tsi(prices, short=10, long=20)
+    def ichimoku_pass(self, close):
+        high_52 = close.rolling(52).max()
+        low_52 = close.rolling(52).min()
+        cloud_mid = (high_52 + low_52) / 2
+        return close.iloc[-1] > cloud_mid.iloc[-1]
 
-        # Long (monthly proxy)
-        tsi_long = self.tsi(prices, short=40, long=80)
-
-        # Blended score
-        score = 0.75 * tsi_short + 0.25 * tsi_long
-        return score
-
-    def keltner_midline(self, score, length=31):
-        return score.rolling(length).mean()
-
-    def ichimoku_pass(self, prices):
-        # Simplified Ichimoku pass/fail
-        high = prices.rolling(52).max()
-        low = prices.rolling(52).min()
-        cloud_mid = (high + low) / 2
-        return prices.iloc[-1] > cloud_mid.iloc[-1]
+    # --------------------
+    # Main execution
+    # --------------------
 
     def run(self, data):
-        scores = {}
-        latest_scores = {}
+        ohlcv = data["ohlcv"]
 
-        for asset in self.assets:
-            prices = data[asset]["close"]
+        # Warmup
+        if len(ohlcv) < 120:
+            return TargetAllocation(self.last_alloc)
 
-            if len(prices) < 100:
-                continue
+        # Build SPY close series
+        spy_close = pd.Series(
+            [d["SPY"]["close"] for d in ohlcv],
+            index=pd.to_datetime([d["SPY"]["date"] for d in ohlcv])
+        )
 
-            score = self.compute_score(prices)
-            midline = self.keltner_midline(score)
+        today = spy_close.index[-1]
+        if today.weekday() != self.rebalance_day:
+            return TargetAllocation(self.last_alloc)
 
-            # Keltner trend condition
-            trend_ok = score.iloc[-1] > midline.iloc[-1]
+        # --------------------
+        # Score computation
+        # --------------------
 
-            # Ichimoku regime filter
-            regime_ok = self.ichimoku_pass(prices)
+        tsi_short = self.tsi(spy_close, short=10, long=20)
+        tsi_long = self.tsi(spy_close, short=40, long=80)
 
-            if trend_ok and regime_ok:
-                scores[asset] = score.iloc[-1]
+        score = 0.75 * tsi_short + 0.25 * tsi_long
+        self.score_history.append(score.iloc[-1])
 
-        if not scores:
-            return TargetAllocation({"BIL": 1.0})
-
-        # Rank assets by score
-        ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-
-        # Allocate equally to top N assets
-        top_n = min(2, len(ranked))
-        weight = 1.0 / top_n
-
-        allocation = {
-            asset: weight for asset, _ in ranked[:top_n]
-        }
-
-        return TargetAllocation(allocation)
+        # Keltner channel on Score
+        score_se_
