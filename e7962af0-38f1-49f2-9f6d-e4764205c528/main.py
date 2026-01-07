@@ -44,8 +44,8 @@ class TradingStrategy(Strategy):
         return num / den
 
     def ichimoku_pass(self, close):
-        high_52 = close.rolling(52).max()
-        low_52 = close.rolling(52).min()
+        high_52 = close.rolling(252).max()
+        low_52 = close.rolling(252).min()
         cloud_mid = (high_52 + low_52) / 2
         return close.iloc[-1] > cloud_mid.iloc[-1]
 
