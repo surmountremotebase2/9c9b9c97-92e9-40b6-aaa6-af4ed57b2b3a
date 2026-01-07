@@ -74,8 +74,8 @@ class TradingStrategy(Strategy):
         # Score computation
         # --------------------
 
-        tsi_short = self.tsi(spy_close, short=10, long=20)
-        tsi_long = self.tsi(spy_close, short=20, long=50)
+        tsi_short = self.tsi(spy_close, short=5, long=10)
+        tsi_long = self.tsi(spy_close, short=10, long=50)
 
         score = 0.75 * tsi_short + 0.25 * tsi_long
         self.score_history.append(score.iloc[-1])
