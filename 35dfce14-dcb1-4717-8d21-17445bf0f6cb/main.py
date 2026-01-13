@@ -7,7 +7,7 @@ import numpy as np
 class TradingStrategy(Strategy):
     def __init__(self):
         raw_tickers = [
-            "AAPL", "NVDA", "MSFT", "GOOG"
+            "NVDA", "MSFT", "GOOG"
         ]
        
         # Use set to remove duplicates, then sort for consistency
