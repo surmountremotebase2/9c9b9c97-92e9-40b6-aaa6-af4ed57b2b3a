@@ -27,6 +27,7 @@ class TradingStrategy(Strategy):
             #log(f"Trading: {congress_buys_holdings[-1]['allocations']}")
             allocations = alloc_dict
             # remove BBY if present
+            allocations.pop("MS-P", None)
             allocations.pop("BBY", None)
         #log(f"allocations:{allocations}")
         return TargetAllocation(allocations)
