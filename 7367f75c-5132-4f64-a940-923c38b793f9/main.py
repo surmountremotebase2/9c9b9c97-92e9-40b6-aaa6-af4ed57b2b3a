@@ -22,9 +22,11 @@ class TradingStrategy(Strategy):
     def run(self, data):
         lobby_qoq_growth_holdings = data[("lobby_qoq_growth",)]
         allocations = {"BIL": 1}
-        if lobby_qoq_growth_holdings:
+        if len(lobby_qoq_growth_holdings) > 0:
             alloc_dict = lobby_qoq_growth_holdings[-1]['allocations']
             #log(f"Trading: {lobby_qoq_growth_holdings[-1]['allocations']}")
             allocations = alloc_dict
+        else:
+
         log(f"allocations:{allocations}")
         return TargetAllocation(allocations)
