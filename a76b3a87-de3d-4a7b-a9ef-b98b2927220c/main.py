@@ -29,5 +29,6 @@ class TradingStrategy(Strategy):
             # remove BBY if present
             allocations.pop("MS-P", None)
             allocations.pop("BBY", None)
+            allocations.pop('HY', None)
         log(f"allocations:{allocations}")
         return TargetAllocation(allocations)
