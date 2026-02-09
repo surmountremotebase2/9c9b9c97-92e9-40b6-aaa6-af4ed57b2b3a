@@ -26,7 +26,6 @@ class TradingStrategy(Strategy):
             alloc_dict = lobby_qoq_growth_holdings[-1]['allocations']
             #log(f"Trading: {lobby_qoq_growth_holdings[-1]['allocations']}")
             allocations = alloc_dict
-        else:
 
         log(f"allocations:{allocations}")
         return TargetAllocation(allocations)
