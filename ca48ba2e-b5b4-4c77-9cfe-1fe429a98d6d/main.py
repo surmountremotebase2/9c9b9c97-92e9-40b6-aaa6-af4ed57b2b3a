@@ -21,10 +21,11 @@ class TradingStrategy(Strategy):
 
     def run(self, data):
         inverse_cramer_holdings = data[("inverse_cramer",)]
-        allocations = {"SPY": 1}
         if inverse_cramer_holdings:
             alloc_dict = inverse_cramer_holdings[-1]['allocations']
             log(f"Trading: {inverse_cramer_holdings[-1]['allocations']}")
             allocations = alloc_dict
+        else:
+            allocations = {"SPY": 1}
         log(f"allocations:{allocations}")
         return TargetAllocation(allocations)
