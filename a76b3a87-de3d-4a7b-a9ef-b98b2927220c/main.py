@@ -21,11 +21,13 @@ class TradingStrategy(Strategy):
 
     def run(self, data):
         congress_buys_holdings = data[("congress_buys",)]
-        allocations = {"BIL": 1}
+        
         if len(congress_buys_holdings) > 0:
             alloc_dict = congress_buys_holdings[-1]['allocations']
             #log(f"Trading: {congress_buys_holdings[-1]['allocations']}")
             allocations = alloc_dict
+        else:
+            allocations = {"SPY": 1}
             
         #log(f"allocations:{allocations}")
         return TargetAllocation(allocations)
