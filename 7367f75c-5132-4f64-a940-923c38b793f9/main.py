@@ -13,7 +13,7 @@ class TradingStrategy(Strategy):
 
     @property
     def assets(self):
-        return self.tickers
+        return self.tickers 
 
     @property
     def data(self):
@@ -21,7 +21,7 @@ class TradingStrategy(Strategy):
 
     def run(self, data):
         lobby_qoq_growth_holdings = data[("lobby_qoq_growth",)]
-        allocations = {"SPY": 1}
+        allocations = {"BIL": 1}
         if lobby_qoq_growth_holdings:
             alloc_dict = lobby_qoq_growth_holdings[-1]['allocations']
             #log(f"Trading: {lobby_qoq_growth_holdings[-1]['allocations']}")
