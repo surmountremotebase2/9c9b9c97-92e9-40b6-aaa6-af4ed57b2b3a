@@ -24,7 +24,7 @@ class TradingStrategy(Strategy):
         allocations = {"SPY": 1}
         if congress_buys_holdings:
             alloc_dict = congress_buys_holdings[-1]['allocations']
-            log(f"Trading: {congress_buys_holdings[-1]['allocations']}")
+            #log(f"Trading: {congress_buys_holdings[-1]['allocations']}")
             allocations = alloc_dict
-        log(f"allocations:{allocations}")
+        #log(f"allocations:{allocations}")
         return TargetAllocation(allocations)
