@@ -6,7 +6,7 @@ import pandas as pd
 class TradingStrategy(Strategy):
     def __init__(self):
         self.data_list = [CongressBuys()]
-        self.tickers = ["SPY"]
+        self.tickers = ["SPY", "GLD"]
 
     @property
     def interval(self):
@@ -62,6 +62,7 @@ class TradingStrategy(Strategy):
             regime = "Risk ON (SPY > 200 SMA)"
 
         else:
+            final_alloc["GLD"] = 0.5
             # No SPY, Congress buys only up to 50%
             total_cb = sum(congress_alloc.values())
             if total_cb > 0:
