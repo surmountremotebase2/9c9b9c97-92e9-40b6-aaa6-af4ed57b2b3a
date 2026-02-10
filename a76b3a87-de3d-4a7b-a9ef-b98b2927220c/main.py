@@ -35,7 +35,7 @@ class TradingStrategy(Strategy):
             index=pd.to_datetime([d["SPY"]["date"] for d in ohlcv])
         )
 
-        sma_200 = spy_close.rolling(50).mean()
+        sma_200 = spy_close.rolling(100).mean()
         spy_above_sma = spy_close.iloc[-1] > sma_200.iloc[-1]
 
         # ----------------------
@@ -51,7 +51,7 @@ class TradingStrategy(Strategy):
 
         if spy_above_sma:
             # 50% SPY
-            final_alloc["SPY"] = 0.50
+            final_alloc["SPY"] = 0.25
 
             # Remaining 50% to Congress buys (scaled)
             total_cb = sum(congress_alloc.values())
