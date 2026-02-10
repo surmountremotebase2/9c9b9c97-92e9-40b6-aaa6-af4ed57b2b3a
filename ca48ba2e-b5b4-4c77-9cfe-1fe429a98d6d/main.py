@@ -22,12 +22,11 @@ class TradingStrategy(Strategy):
 
     def run(self, data):
         # ----------------------
-        # SPY price + 100 SMA
+        # SPY 100-day SMA
         # ----------------------
         ohlcv = data["ohlcv"]
 
         if len(ohlcv) < 100:
-            log("Not enough data for 100-day SMA")
             return TargetAllocation({"SPY": 1})
 
         spy_close = pd.Series(
@@ -42,34 +41,41 @@ class TradingStrategy(Strategy):
         # Inverse Cramer
         # ----------------------
         inverse_cramer_holdings = data[("inverse_cramer",)]
-
-        base_alloc = {}
-        if inverse_cramer_holdings:
-            base_alloc = inverse_cramer_holdings[-1]["allocations"]
+        base_alloc = inverse_cramer_holdings[-1]["allocations"] if inverse_cramer_holdings else {}
 
         final_alloc = {}
 
+        # ----------------------
+        # Regime asset
+        # ----------------------
         if spy_above_sma:
-            # Risk-on: +25% SPY
             final_alloc["SPY"] = 0.25
-            remaining = 0.75
-            regime = "SPY > 100 SMA → +25% SPY"
-
+            regime = "SPY > 100 SMA"
         else:
-            # Defensive: +50% GLD
             final_alloc["GLD"] = 0.50
-            remaining = 0.50
-            regime = "SPY ≤ 100 SMA → +50% GLD"
+            regime = "SPY ≤ 100 SMA"
 
         # ----------------------
-        # Scale Inverse Cramer
+        # Convert long/short → long-only
         # ----------------------
-        total_base = sum(base_alloc.values())
-        if total_base > 0:
-            for ticker, weight in base_alloc.items():
-                final_alloc[ticker] = final_alloc.get(ticker, 0) + (
-                    remaining * weight / total_base
-                )
+        long_total = sum(w for w in base_alloc.values() if w > 0)
+        short_abs_total = sum(abs(w) for w in base_alloc.values() if w < 0)
+
+        # Add long positions
+        for ticker, weight in base_alloc.items():
+            if weight > 0:
+                final_alloc[ticker] = final_alloc.get(ticker, 0) + weight
+
+        # Redirect short exposure to SPY
+        final_alloc["SPY"] = final_alloc.get("SPY", 0) + short_abs_total
+
+        # ----------------------
+        # Normalize to 100%
+        # ----------------------
+        total = sum(final_alloc.values())
+        if total > 0:
+            for ticker in final_alloc:
+                final_alloc[ticker] /= total
 
         log(f"Regime: {regime}")
         log(f"Final allocations: {final_alloc}")
