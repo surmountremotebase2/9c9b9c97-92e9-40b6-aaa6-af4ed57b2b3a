@@ -26,16 +26,16 @@ class TradingStrategy(Strategy):
         # ----------------------
         ohlcv = data["ohlcv"]
 
-        if len(ohlcv) < 200:
+        if len(ohlcv) < 10:
             log("Not enough data for 200-day SMA")
             return TargetAllocation({"SPY": 1})
 
         spy_close = pd.Series(
-            [d["SPY"]["close"] for d in ohlcv],
+            [d["SPY"]["low"] for d in ohlcv],
             index=pd.to_datetime([d["SPY"]["date"] for d in ohlcv])
         )
 
-        sma_200 = spy_close.rolling(200).mean()
+        sma_200 = spy_close.rolling(50).mean()
         spy_above_sma = spy_close.iloc[-1] > sma_200.iloc[-1]
 
         # ----------------------
