@@ -25,7 +25,6 @@ class TradingStrategy(Strategy):
         # SPY 100-day SMA
         # ----------------------
         ohlcv = data["ohlcv"]
-
         if len(ohlcv) < 100:
             return TargetAllocation({"SPY": 1})
 
@@ -38,44 +37,31 @@ class TradingStrategy(Strategy):
         spy_above_sma = spy_close.iloc[-1] > sma_100.iloc[-1]
 
         # ----------------------
-        # Inverse Cramer
+        # Regime allocation
+        # ----------------------
+        if spy_above_sma:
+            regime_alloc = {"SPY": 0.25}
+            stock_bucket = 0.75
+            regime = "SPY > 100 SMA"
+        else:
+            regime_alloc = {"GLD": 0.50}
+            stock_bucket = 0.50
+            regime = "SPY ≤ 100 SMA"
+
+        # ----------------------
+        # Inverse Cramer (long-only)
         # ----------------------
         inverse_cramer_holdings = data[("inverse_cramer",)]
         base_alloc = inverse_cramer_holdings[-1]["allocations"] if inverse_cramer_holdings else {}
 
-        final_alloc = {}
+        longs = {k: v for k, v in base_alloc.items() if v > 0}
+        long_total = sum(longs.values())
 
-        # ----------------------
-        # Regime asset
-        # ----------------------
-        if spy_above_sma:
-            final_alloc["SPY"] = 0.25
-            regime = "SPY > 100 SMA"
-        else:
-            final_alloc["GLD"] = 0.50
-            regime = "SPY ≤ 100 SMA"
+        final_alloc = dict(regime_alloc)
 
-        # ----------------------
-        # Convert long/short → long-only
-        # ----------------------
-        long_total = sum(w for w in base_alloc.values() if w > 0)
-        short_abs_total = sum(abs(w) for w in base_alloc.values() if w < 0)
-
-        # Add long positions
-        for ticker, weight in base_alloc.items():
-            if weight > 0:
-                final_alloc[ticker] = final_alloc.get(ticker, 0) + weight
-
-        # Redirect short exposure to SPY
-        final_alloc["SPY"] = final_alloc.get("SPY", 0) + short_abs_total
-
-        # ----------------------
-        # Normalize to 100%
-        # ----------------------
-        total = sum(final_alloc.values())
-        if total > 0:
-            for ticker in final_alloc:
-                final_alloc[ticker] /= total
+        if long_total > 0:
+            for ticker, weight in longs.items():
+                final_alloc[ticker] = stock_bucket * (weight / long_total)
 
         log(f"Regime: {regime}")
         log(f"Final allocations: {final_alloc}")
