@@ -29,5 +29,5 @@ class TradingStrategy(Strategy):
         else:
             allocations = {"SPY": 1}
             
-        #log(f"allocations:{allocations}")
+        log(f"allocations:{allocations}")
         return TargetAllocation(allocations)
