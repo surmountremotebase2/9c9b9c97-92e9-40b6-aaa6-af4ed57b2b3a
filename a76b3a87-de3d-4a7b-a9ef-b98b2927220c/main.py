@@ -57,7 +57,7 @@ class TradingStrategy(Strategy):
             total_cb = sum(congress_alloc.values())
             if total_cb > 0:
                 for ticker, weight in congress_alloc.items():
-                    final_alloc[ticker] = 0.50 * (weight / total_cb)
+                    final_alloc[ticker] = 0.75 * (weight / total_cb)
 
             regime = "Risk ON (SPY > 200 SMA)"
 
