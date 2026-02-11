@@ -17,7 +17,7 @@ class TradingStrategy(Strategy):
 
     @property
     def data(self):
-        return self.data_list + self.tickers
+        return self.data_list
 
     def run(self, data):
         house_energy_and_commerce_committee_holdings = data[("house_energy_and_commerce_committee",)]
