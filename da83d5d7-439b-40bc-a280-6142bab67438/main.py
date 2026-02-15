@@ -107,6 +107,8 @@ class TradingStrategy(Strategy):
 
             # Score ROC (durability)
             score_roc = score_smoothed - score_series.iloc[-5]
+            log(f"Asset : {asset} | Score : {score_roc}")
+
 
             # Ichimoku pass/fail
             base_line = self.ichimoku_base(df["high"], df["low"])
