@@ -1,173 +1,164 @@
-from strategies.BaseStrategy import BaseStrategy
-import numpy as np
 import pandas as pd
-import os
+import numpy as np
+from surmount.base_class import Strategy, TargetAllocation
+from surmount.logging import log
 
 
-class IchiCloudMom(BaseStrategy):
+class TradingStrategy(Strategy):
     """
-    Jason Lipps Momentum Strategy – Full Feature Implementation
-
-    Features:
-    - Blended TSI score (75% weekly proxy, 25% monthly proxy)
-    - Score smoothing + Score ROC
-    - Keltner Channel on Score (31, 4x)
-    - Static score support/resistance (blue lines proxy)
-    - Ichimoku Cloud pass/fail
-    - Cross-ETF ranking
-    - 25 / 50 / 100 exposure scaling
-    - Safe asset fallback (BIL)
+    Jason Lipps Multi-Asset Momentum Strategy
+    ------------------------------------------
+    Core Features:
+    - TSI(10) computed on:
+        • Weekly candles (short-term component)
+        • Monthly candles (long-term component)
+    - Blended Score = 75% Weekly + 25% Monthly
+    - 5-period smoothing of Score
+    - Keltner channel (31, 4×vol proxy) on Score
+    - Ichimoku Base line pass/fail regime filter
+    - Cross-asset ranking
+    - 25% / 50% / 100% exposure scaling
+    - Weekly rebalance
     """
 
     def __init__(self):
-        super().__init__(
-            strategy_name="IchiCloudMom",
-            strategy_version="3.0",
-            MacroTickers=["MEDCPIM158SFRBCLE"],
-            tickers=["SPY", "QQQ", "TLT", "IEF", "BIL"]
-        )
-
+        self._assets = ["SPY", "QQQ", "TLT", "IEF", "BIL"]
         self.risk_assets = ["SPY", "QQQ", "TLT", "IEF"]
         self.safe_asset = "BIL"
-        self.Benchmark = "SPY"
-        self.CPI = "MEDCPIM158SFRBCLE"
 
-        self.WARMUP = 252
-        self.strategy_file = os.path.basename(__file__)
-
-        self.last_alloc = {a: 0.0 for a in self.risk_assets + [self.safe_asset]}
+        self.rebalance_day = 1  # Tuesday
+        self.last_alloc = {a: 0.0 for a in self._assets}
         self.last_alloc[self.safe_asset] = 1.0
 
-        self.score_hist = {a: [] for a in self.risk_assets}
-
+    @property
     def assets(self):
-        """The list of assets this strategy trades."""
         return self._assets
 
     @property
     def interval(self):
-        """The data interval required for the strategy."""
         return "1day"
 
-
-
     # -------------------------------------------------
-    # Indicators
+    # Indicator Helpers
     # -------------------------------------------------
-    def tsi(self, close, short, long):
+
+    def tsi(self, close, period=10):
         diff = close.diff()
         abs_diff = diff.abs()
-        num = diff.ewm(span=short).mean().ewm(span=long).mean()
-        den = abs_diff.ewm(span=short).mean().ewm(span=long).mean()
-        return num / den
 
-    def ichimoku_base(self, high, low):
-        return (high.rolling(26).max() + low.rolling(26).min()) / 2
+        ema1 = diff.ewm(span=period).mean()
+        ema2 = ema1.ewm(span=period).mean()
 
-    def score_support(self, score_series):
-        """
-        Proxy for Jason's manual blue support lines:
-        Use lower-quantile cluster of historical scores.
-        """
-        if len(score_series) < 100:
-            return np.nan
-        return score_series.quantile(0.20)
+        abs1 = abs_diff.ewm(span=period).mean()
+        abs2 = abs1.ewm(span=period).mean()
+
+        return ema2 / abs2
+
+    def ichimoku_base(self, high, low, period=26):
+        return (high.rolling(period).max() +
+                low.rolling(period).min()) / 2
+
+    def keltner_score(self, score_series):
+        mid = score_series.rolling(31).mean()
+        vol = score_series.rolling(31).std()
+        lower = mid - 4 * vol
+        return mid.iloc[-1], lower.iloc[-1]
 
     # -------------------------------------------------
-    # Main execution
+    # Main Execution
     # -------------------------------------------------
-    def run_strategy(self, data, MacroData):
-        data = data.ffill().bfill()
 
-        allocation = pd.DataFrame(
-            index=data.index,
-            columns=self.risk_assets + [self.safe_asset],
-            dtype=float
-        ).fillna(0.0)
+    def run(self, data):
 
-        allocation.iloc[0][self.safe_asset] = 1.0
+        ohlcv = data["ohlcv"]
+        if len(ohlcv) < 300:
+            return TargetAllocation(self.last_alloc)
 
-        for i in range(1, len(data)):
-            allocation.iloc[i] = allocation.iloc[i - 1]
+        today = pd.to_datetime(ohlcv[-1]["SPY"]["date"])
+        if today.weekday() != self.rebalance_day:
+            return TargetAllocation(self.last_alloc)
 
-            if i < self.WARMUP:
+        asset_scores = {}
+
+        for asset in self.risk_assets:
+
+            df = pd.DataFrame({
+                "close": [d[asset]["close"] for d in ohlcv],
+                "high":  [d[asset]["high"] for d in ohlcv],
+                "low":   [d[asset]["low"] for d in ohlcv],
+            }, index=pd.to_datetime([d[asset]["date"] for d in ohlcv]))
+
+            # --- Weekly Resample ---
+            weekly = df.resample("W-FRI").last()
+            weekly_tsi = self.tsi(weekly["close"], period=10)
+
+            # --- Monthly Resample ---
+            monthly = df.resample("M").last()
+            monthly_tsi = self.tsi(monthly["close"], period=10)
+
+            if len(weekly_tsi.dropna()) < 5 or len(monthly_tsi.dropna()) < 3:
                 continue
 
-            date = data.index[i]
+            score = 0.75 * weekly_tsi.iloc[-1] + 0.25 * monthly_tsi.iloc[-1]
 
-            scores = {}
-            score_roc = {}
-            regimes = {}
+            # 5-period smoothing (weekly equivalent)
+            score_series = weekly_tsi.dropna().rolling(5).mean()
+            score_smoothed = 0.75 * score_series.iloc[-1] + 0.25 * monthly_tsi.iloc[-1]
 
-            # -------------------------------
-            # Score computation per asset
-            # -------------------------------
-            for asset in self.risk_assets:
-                close = data["Close"][asset].iloc[:i]
-                high = data["High"][asset].iloc[:i]
-                low = data["Low"][asset].iloc[:i]
+            # Score ROC (durability)
+            score_roc = score_smoothed - score_series.iloc[-5]
 
-                tsi_short = self.tsi(close, 10, 20).iloc[-1]
-                tsi_long = self.tsi(close, 40, 80).iloc[-1]
+            # Ichimoku pass/fail
+            base_line = self.ichimoku_base(df["high"], df["low"])
+            regime_pass = df["close"].iloc[-1] > base_line.iloc[-1]
 
-                raw_score = 0.75 * tsi_short + 0.25 * tsi_long
-                self.score_hist[asset].append(raw_score)
+            asset_scores[asset] = {
+                "score": score_smoothed,
+                "roc": score_roc,
+                "regime": regime_pass,
+                "history": score_series
+            }
 
-                score_series = pd.Series(self.score_hist[asset])
-                smooth_score = score_series.rolling(5).mean().iloc[-1]
+        if len(asset_scores) == 0:
+            return TargetAllocation(self.last_alloc)
 
-                if np.isnan(smooth_score):
-                    continue
+        # Filter regime
+        candidates = {k: v for k, v in asset_scores.items() if v["regime"]}
 
-                scores[asset] = smooth_score
-                score_roc[asset] = score_series.diff(5).iloc[-1]
-
-                ichi_base = self.ichimoku_base(high, low).iloc[-1]
-                regimes[asset] = close.iloc[-1] > ichi_base
-
-            if not scores:
-                allocation.iloc[i][self.safe_asset] = 1.0
-                continue
-
-            # -------------------------------
-            # Rank assets (Score + ROC)
-            # -------------------------------
-            ranked = sorted(
-                scores.keys(),
-                key=lambda a: (scores[a], score_roc[a]),
-                reverse=True
-            )
-
-            top = ranked[0]
-            score_series = pd.Series(self.score_hist[top])
-
-            # -------------------------------
-            # Keltner on Score
-            # -------------------------------
-            midline = score_series.rolling(31).mean().iloc[-1]
-            lower_band = midline - 4 * score_series.rolling(31).std().iloc[-1]
-            support = self.score_support(score_series)
-
-            if np.isnan(midline) or np.isnan(lower_band):
-                continue
-
-            # -------------------------------
-            # Exposure scaling
-            # -------------------------------
-            exposure = 0.0
-            if regimes[top]:
-                if scores[top] > midline:
-                    exposure = 1.0
-                elif scores[top] > lower_band:
-                    exposure = 0.50
-                elif scores[top] > support:
-                    exposure = 0.25
-
-            alloc = {a: 0.0 for a in allocation.columns}
-            alloc[top] = exposure
-            alloc[self.safe_asset] = 1.0 - exposure
-
-            allocation.loc[date] = alloc
+        if len(candidates) == 0:
+            alloc = {a: 0.0 for a in self._assets}
+            alloc[self.safe_asset] = 1.0
             self.last_alloc = alloc
+            return TargetAllocation(self.last_alloc)
 
-        return allocation
+        # Rank by Score then ROC
+        ranked = sorted(
+            candidates.items(),
+            key=lambda x: (x[1]["score"], x[1]["roc"]),
+            reverse=True
+        )
+
+        top_asset, top_data = ranked[0]
+
+        # Keltner logic
+        mid, lower = self.keltner_score(top_data["history"])
+
+        exposure = 0.0
+        if top_data["score"] > mid:
+            exposure = 1.0
+        elif top_data["score"] > lower:
+            exposure = 0.5
+        elif top_data["score"] > lower * 0.8:
+            exposure = 0.25
+        else:
+            exposure = 0.0
+
+        alloc = {a: 0.0 for a in self._assets}
+        alloc[top_asset] = float(exposure)
+        alloc[self.safe_asset] = float(1.0 - exposure)
+
+        self.last_alloc = alloc
+
+        log(f"Top Asset: {top_asset} | Exposure: {exposure}")
+
+        return TargetAllocation(self.last_alloc)
