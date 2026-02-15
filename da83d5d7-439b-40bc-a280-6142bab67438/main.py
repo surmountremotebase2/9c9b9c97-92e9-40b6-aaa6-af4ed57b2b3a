@@ -40,6 +40,17 @@ class IchiCloudMom(BaseStrategy):
 
         self.score_hist = {a: [] for a in self.risk_assets}
 
+    def assets(self):
+        """The list of assets this strategy trades."""
+        return self._assets
+
+    @property
+    def interval(self):
+        """The data interval required for the strategy."""
+        return "1day"
+
+
+
     # -------------------------------------------------
     # Indicators
     # -------------------------------------------------
