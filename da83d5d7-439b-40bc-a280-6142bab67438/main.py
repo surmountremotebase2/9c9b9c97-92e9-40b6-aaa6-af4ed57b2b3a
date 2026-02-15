@@ -59,8 +59,8 @@ class TradingStrategy(Strategy):
                 low.rolling(period).min()) / 2
 
     def keltner_score(self, score_series):
-        mid = score_series.rolling(31).mean()
-        vol = score_series.rolling(31).std()
+        mid = score_series.rolling(100).mean()
+        vol = score_series.rolling(100).std()
         lower = mid - 4 * vol
         return mid.iloc[-1], lower.iloc[-1]
 
@@ -106,7 +106,7 @@ class TradingStrategy(Strategy):
             score_smoothed = 0.75 * score_series.iloc[-1] + 0.25 * monthly_tsi.iloc[-1]
 
             # Score ROC (durability)
-            score_roc = score_smoothed - score_series.iloc[-5]
+            score_roc = (score_smoothed - score_series.iloc[-5]) * 100
             log(f"Asset : {asset} | Score : {score_roc}")
 
 
