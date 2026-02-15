@@ -71,7 +71,7 @@ class TradingStrategy(Strategy):
     def run(self, data):
 
         ohlcv = data["ohlcv"]
-        if len(ohlcv) < 300:
+        if len(ohlcv) < 1:
             return TargetAllocation(self.last_alloc)
 
         today = pd.to_datetime(ohlcv[-1]["SPY"]["date"])
