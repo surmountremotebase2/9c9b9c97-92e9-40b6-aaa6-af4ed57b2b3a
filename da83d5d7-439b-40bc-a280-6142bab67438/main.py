@@ -150,7 +150,7 @@ class TradingStrategy(Strategy):
             exposure = 1.0
         elif top_data["score"] > lower:
             exposure = 0.5
-        elif top_data["score"] > lower * 0.8:
+        elif top_data["score"] > lower * 0.7:
             exposure = 0.25
         else:
             exposure = 0.0
