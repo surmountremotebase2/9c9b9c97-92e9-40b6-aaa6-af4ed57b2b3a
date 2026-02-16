@@ -22,8 +22,8 @@ class TradingStrategy(Strategy):
     """
 
     def __init__(self):
-        self._assets = ["SPY", "QQQ", "TLT", "IEF", "BIL"]
-        self.risk_assets = ["SPY", "QQQ", "TLT", "IEF"]
+        self._assets = ["SPY", "QQQ", "TLT", "IEF", "GLD", "BIL"]
+        self.risk_assets = ["SPY", "QQQ", "TLT", "IEF", "GLD"]
         self.safe_asset = "BIL"
 
         self.rebalance_day = 1  # Tuesday
