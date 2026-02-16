@@ -59,8 +59,8 @@ class TradingStrategy(Strategy):
                 low.rolling(period).min()) / 2
 
     def keltner_score(self, score_series):
-        mid = score_series.rolling(20).mean()
-        vol = score_series.rolling(20).std()
+        mid = score_series.rolling(50).mean()
+        vol = score_series.rolling(50).std()
         lower = mid - 2.5 * vol
         return mid.iloc[-1], lower.iloc[-1]
 
