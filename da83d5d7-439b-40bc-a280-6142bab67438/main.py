@@ -22,8 +22,8 @@ class TradingStrategy(Strategy):
     """
 
     def __init__(self):
-        self._assets = ["SPY", "QQQ", "TLT", "IEF", "IAU", "BIL"]
-        self.risk_assets = ["SPY", "QQQ", "TLT", "IEF", "IAU"]
+        self._assets = ["SPY", "QQQ", "TLT", "IEF", "IAU", "UUP", "BIL"]
+        self.risk_assets = ["SPY", "QQQ", "TLT", "IEF", "IAU", "UUP"]
         self.safe_asset = "BIL"
 
         self.rebalance_day = 1  # Tuesday
@@ -61,7 +61,7 @@ class TradingStrategy(Strategy):
     def keltner_score(self, score_series):
         mid = score_series.rolling(20).mean()
         vol = score_series.rolling(20).std()
-        lower = mid - 2 * vol
+        lower = mid - 2.5 * vol
         return mid.iloc[-1], lower.iloc[-1]
 
     # -------------------------------------------------
