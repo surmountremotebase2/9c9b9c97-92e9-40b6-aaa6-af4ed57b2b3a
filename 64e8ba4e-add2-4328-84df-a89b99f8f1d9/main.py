@@ -1,12 +1,11 @@
 from surmount.base_class import Strategy, TargetAllocation, backtest
 from surmount.logging import log
 from surmount.data import NDWFirstTrustFocusFive
-from datetime import datetime
 
 class TradingStrategy(Strategy):
-    def init(self):
-        self.tickers = []
+    def __init__(self):
         self.data_list = [NDWFirstTrustFocusFive()]
+        self.tickers = []
 
     @property
     def interval(self):
@@ -21,13 +20,15 @@ class TradingStrategy(Strategy):
         return self.data_list
 
     def run(self, data):
+        #log(str(self.data_list))
         for i in self.data_list:
+            #log(str(i))
             if tuple(i)[0] == "ndw_ftrust5":
                 ndw_data = data.get(tuple(i))
                 if ndw_data and len(ndw_data) > 0:
-                    allocations = ndw_data[-1].get("allocations", {})
+                    #allocations = ndw_data[-1].get("allocations", {})
+                    allocations = ndw_data[0].get("allocations", {})
                     total = sum(allocations.values())
-                    log(allocations)
+                    log(str(allocations))
                     if total > 0:
                         return TargetAllocation({k: v / total for k, v in allocations.items()})
-        return None
