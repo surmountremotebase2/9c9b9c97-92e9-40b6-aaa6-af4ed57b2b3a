@@ -29,6 +29,6 @@ class TradingStrategy(Strategy):
                     allocations = ndw_data[-1].get("allocations", {})
                     #allocations = ndw_data[0].get("allocations", {})
                     total = sum(allocations.values())
-                    log(str(allocations))
+                    #log(str(allocations))
                     if total > 0:
                         return TargetAllocation({k: v / total for k, v in allocations.items()})
